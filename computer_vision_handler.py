@@ -17,7 +17,7 @@ from pvz_automate import PVZAutomate
 class CVToAutomationInterfaceClass:
     def __init__(self, automator: PVZAutomate, window_name: str = 'CV Output',
                  should_visualize: bool = False, should_profile: bool = False):
-        # Plants vs Zombies Automation Class object, having the API that provides all the Automation Features.
+        # Plants vs Zombies Automation Class object, having all the Automation Features.
         self.automator = automator
         # Self Explanatory.
         self.window_name = window_name

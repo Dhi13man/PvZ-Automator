@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # Initialize relevant classes for code abstraction
     pvzAutomator = PVZAutomate(window_name=windowName)
     automationInterface = CVToAutomationInterfaceClass(automator=pvzAutomator, window_name=windowName,
-                                                       should_visualize=True, should_profile=True)
+                                                       should_visualize=True, should_profile=False)
 
     # t1 = Thread(target=screen_record_cv2_mode, args=(pvzAutomator, windowName))
     # t1.start()
