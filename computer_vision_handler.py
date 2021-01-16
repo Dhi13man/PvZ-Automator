@@ -13,67 +13,86 @@ from PIL import ImageGrab
 from pvz_automate import PVZAutomate
 
 
-def screen_record_win32_mode(automator: PVZAutomate, window_name: str = 'CV Output'):
-    last_time = time.time()
-    winCap = WindowCapture('Plants vs. Zombies')
-    while True:
-        # Record Screen using win32 and process if needed
-        printScreen = np.array(winCap.get_screenshot())
-        # processedImage = process_img(printScreen)
+# Records screen and helps interface the class having the Automation Features using the real time recording.
+class CVToAutomationInterfaceClass:
+    def __init__(self, automator: PVZAutomate, window_name: str = 'CV Output',
+                 should_visualize: bool = False, should_profile: bool = False):
+        # Plants vs Zombies Automation Class object, having the API that provides all the Automation Features.
+        self.automator = automator
+        # Self Explanatory.
+        self.window_name = window_name
+        self.should_visualize = should_visualize
+        self.should_profile = should_profile
 
-        # Performance Profiling
-        print('Win32 mode working at {} loops per second.'.format(1.0 / (time.time() - last_time)))
-        last_time = time.time()
-
-        # Update working class and apply working Logic
-        automator.printScreen = printScreen
-        automator.working_logic()
-
-        # Visualize what the automator is seeing
-        cv2.imshow(winname=window_name, mat=automator.printScreen)
-        # cv2.imshow(winname=window_name, mat=cv2.imread('lawn.png'))
-
-        # User Input and Termination condition
-        automator.user_input_detect()
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
-
-
-def screen_record_cv2_mode(automator: PVZAutomate, window_name: str = 'CV Output'):
-    last_time = time.time()
-    while True:
-        # Record Screen using OpenCV (800x600 windowed mode) and process if needed
-        printScreen = np.array(ImageGrab.grab(bbox=(0, 40, 800, 640)))
-        # processedImage = process_img(printScreen)
-
-        # Performance Profiling
-        print('OpenCV mode Working at {} loops per second.'.format(1.0 / (time.time() - last_time)))
-        last_time = time.time()
-
-        # Update working class and apply working Logic
-        automator.printScreen = cv2.cvtColor(printScreen, cv2.COLOR_BGR2RGB)
-        automator.working_logic()
+    # Apply automator's working logic, visualize outputs if needed, and take input from user.
+    def automate_from_screen_record(self):
+        self.automator.working_logic()
 
         # Visualize what the automator is seeing
-        cv2.imshow(winname=window_name, mat=automator.printScreen)
-        # cv2.imshow(winname=window_name, mat=cv2.imread('lawn.png'))
+        if self.should_visualize:
+            cv2.imshow(winname=self.window_name, mat=self.automator.printScreen)
+        else:
+            cv2.imshow(winname=self.window_name, mat=cv2.imread('lawn.png'))
 
         # User Input and Termination condition
-        automator.user_input_detect()
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
+        self.automator.user_input_detect()
+
+    # Faster when just recording, gets just as slow as OpenCV mode once processing starts.
+    def screen_record_win32_mode(self):
+        last_time = time.time()
+        winCap = WindowCapture('Plants vs. Zombies') # Window Name of the application to be Screen Captured
+        while True:
+            # Record Screen using win32 and process if needed
+            printScreen = np.array(winCap.get_screenshot())
+            # processedImage = process_img(printScreen)
+
+            # Performance Profiling
+            if self.should_profile:
+                print('Win32 mode working at {} loops per second.'.format(1.0 / (time.time() - last_time)))
+                last_time = time.time()
+
+            # Update Automator working class with real-time screen recording, and apply it's working Logic
+            self.automator.printScreen = printScreen
+            self.automate_from_screen_record()
+
+            # Quit on `q`
+            if cv2.waitKey(5) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
+                break
+
+    # Direct OpenCV capture. Slower.
+    def screen_record_cv2_mode(self):
+        last_time = time.time()
+        while True:
+            # Record Screen using OpenCV (800x600 windowed mode) and process if needed
+            printScreen = np.array(ImageGrab.grab(bbox=(0, 40, 800, 640)))
+            # printScreen = process_img(printScreen)
+
+            # Performance Profiling
+            if self.should_profile:
+                print('OpenCV mode Working at {} loops per second.'.format(1.0 / (time.time() - last_time)))
+                last_time = time.time()
+
+            # Update Automator working class with real-time screen recording, and apply it's working Logic
+            self.automator.printScreen = cv2.cvtColor(printScreen, cv2.COLOR_BGR2RGB)
+            self.automate_from_screen_record()
+
+            # Quit on `q`
+            if cv2.waitKey(5) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
+                break
 
 
 def list_window_names():
-    def win_enum_handler(hwnd, ctx):
+    def win_enum_handler(hwnd):
         if win32gui.IsWindowVisible(hwnd):
             print(hex(hwnd), win32gui.GetWindowText(hwnd))
 
     win32gui.EnumWindows(win_enum_handler, None)
 
 
+# Faster Window Screen Capture method, taken from Learn Code by Gaming's amazing tutorial:
+# https://www.youtube.com/watch?v=WymCpVUPWQ4&ab_channel=LearnCodeByGaming
 class WindowCapture:
     # properties
     w = 0

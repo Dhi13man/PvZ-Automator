@@ -26,11 +26,13 @@ class ImageProcessor:
 
 
 class PVZAutomate:
-    def __init__(self, initial_record_screen: np.ndarray, window_name: str = 'CV Output'):
+    def __init__(self, initial_record_screen: np.ndarray = np.array([]), window_name: str = 'CV Output'):
+        # Initially not automating, starts when 'b' pressed
+        self.startFlag = False
+        # OpenCV Screens
         self.windowName = window_name
         self.printScreen = initial_record_screen
         self.processedResultImage = self.printScreen
-        self.startFlag = False
 
     def input_click(self, coordinates: tuple, click_chance: float = 1, should_show: bool = False):
         if uniform(0, 1) <= click_chance:
@@ -40,11 +42,14 @@ class PVZAutomate:
 
     def user_input_detect(self):
         # User Control Menu
+        # TAKE WINDOW SCREENSHOT
         if cv2.waitKey(5) & 0xFF == ord('s'):
             cv2.imwrite('seed.png', self.printScreen)
             cv2.imwrite('processed_sun.png', img=ImageProcessor.edge_detection(self.printScreen))
+        # BEGIN AUTOMATION
         if cv2.waitKey(5) & 0xFF == ord('b'):
             self.startFlag = True
+        # END AUTOMATION
         if cv2.waitKey(5) & 0xFF == ord('e'):
             self.startFlag = False
 
@@ -77,7 +82,6 @@ class PVZAutomate:
 
         # Calculate outputs
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-        print(max_val)
 
         # Bounding Boxes
         detected_topLeft = max_loc
@@ -92,28 +96,28 @@ class PVZAutomate:
                                              color=color, thickness=2, lineType=cv2.LINE_4)
         return processedResultImage, clickCoordinates
 
-    def collect_sun(self, should_show: bool = False):
+    def collect_sun(self, click_chance: float = 1, should_show: bool = False):
         # processedResultImage, clickCoordinatesList = self.detect_components('sun', threshold=0.8)
         # print(len(clickCoordinatesList))
         # for clickCoordinates in clickCoordinatesList:
         #     self.input_click(clickCoordinates)
 
         self.processedResultImage, clickCoordinates = self.detect_component('sun')
-        self.input_click(clickCoordinates)
+        self.input_click(clickCoordinates, click_chance=click_chance, should_show=should_show)
 
     def plant(self, click_chance: float = 1, should_show: bool = False):
         if uniform(0, 1) <= click_chance:
             # Choose Seed
             self.processedResultImage, clickCoordinates = self.detect_component('seed')
-            self.input_click(clickCoordinates)
+            self.input_click(clickCoordinates, should_show=should_show)
 
             # Plant on lawn
             self.processedResultImage, clickCoordinates = self.detect_component('lawn')
-            self.input_click(clickCoordinates)
+            self.input_click(clickCoordinates, should_show=should_show)
 
     def working_logic(self):
         # Auto click detected sun
         if self.startFlag:
-            self.collect_sun(should_show=True)
-            self.plant(0.25)
+            self.collect_sun(click_chance=0.95, should_show=False)
+            self.plant(click_chance=0.25, should_show=False)
 
