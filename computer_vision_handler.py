@@ -104,11 +104,14 @@ class WindowCapture:
     offset_y = 0
 
     # constructor
-    def __init__(self, window_name):
-        # find the handle for the window we want to capture
-        self.hwnd = win32gui.FindWindow(None, window_name)
-        if not self.hwnd:
-            raise Exception('Window not found: {}'.format(window_name))
+    def __init__(self, window_name=None):
+        if window_name is None:
+            self.hwnd = win32gui.GetDesktopWindow()
+        else:
+            # find the handle for the window we want to capture
+            self.hwnd = win32gui.FindWindow(None, window_name)
+            if not self.hwnd:
+                raise Exception('Window not found: {}'.format(window_name))
 
         # get the window size
         window_rect = win32gui.GetWindowRect(self.hwnd)
